@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Курсы</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .search-filter {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+            max-width: 1000px;
+        }
+        .search-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .filter-select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .search-button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .search-button:hover {
+            background-color: #45a049;
+        }
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .course-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .course-header {
+            margin-bottom: 15px;
+        }
+        .course-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .course-description {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+            flex-grow: 1;
+        }
+        .course-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #888;
+        }
+        .difficulty {
+            font-weight: bold;
+        }
+        .difficulty-1 { color: #4CAF50; } /* Очень легко */
+        .difficulty-2 { color: #8BC34A; } /* Достаточно легко */
+        .difficulty-3 { color: #FFC107; } /* Нормально */
+        .difficulty-4 { color: #FF9800; } /* Достаточно сложно */
+        .difficulty-5 { color: #F44336; } /* Очень сложно */
+    </style>
+</head>
+{% include 'education/header.html' %}
+<body>
+    <div class="container">
+        <h1>Курсы</h1>
+
+        <form method="get" action="{% url 'list_of_courses' %}" class="search-filter">
+            <input type="text"
+                   class="search-input"
+                   placeholder="Поиск курсов..."
+                   name="search"
+                   value="{{ request.GET.search }}">
+
+            <select class="filter-select" name="difficulty">
+                <option value="">Все уровни сложности</option>
+                <option value="1" {% if request.GET.difficulty == '1' %}selected{% endif %}>Очень легко</option>
+                <option value="2" {% if request.GET.difficulty == '2' %}selected{% endif %}>Достаточно легко</option>
+                <option value="3" {% if request.GET.difficulty == '3' %}selected{% endif %}>Нормально</option>
+                <option value="4" {% if request.GET.difficulty == '4' %}selected{% endif %}>Достаточно сложно</option>
+                <option value="5" {% if request.GET.difficulty == '5' %}selected{% endif %}>Очень сложно</option>
+            </select>
+
+            <button type="submit" class="search-button">Найти</button>
+        </form>
+
+        <div class="course-grid">
+            {% for lesson in lessons %}
+            <div class="course-card" onclick="window.location='{{ lesson.get_absolute_url }}';" style="cursor: pointer;">
+                <div class="course-header">
+                    <h2 class="course-title">{{ lesson.name }}</h2>
+                    <p class="course-description">{{ lesson.description|default:"Описание отсутствует"|truncatechars:100 }}</p>
+                </div>
+                <div class="course-footer">
+                    <span class="creator">
+                        <a href="{% url 'get_concrete_profile' lesson.creator.id %}"
+                           style="text-decoration: none; color: inherit;"
+                           onclick="event.stopPropagation()">
+                            {% if lesson.creator %}
+                                {{ lesson.creator.first_name }} {{ lesson.creator.last_name }}
+                            {% else %}
+                                Анонимный автор
+                            {% endif %}
+                        </a>
+                    </span>
+                    <span class="difficulty difficulty-{{ lesson.difficulty }}">
+                        {{ lesson.get_difficulty_display }}
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="no-courses" style="grid-column: 1 / -1; text-align: center; padding: 20px;">
+                Курсы не найдены. Попробуйте изменить параметры поиска.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+{% include 'education/footer.html' %}
+</html>

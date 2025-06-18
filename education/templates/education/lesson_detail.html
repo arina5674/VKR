@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ lesson.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .lesson-title {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .lesson-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            color: #666;
+        }
+        .creator-link {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+        .creator-link:hover {
+            text-decoration: underline;
+        }
+        .difficulty {
+            font-weight: bold;
+        }
+        .difficulty-1 { color: #4CAF50; }
+        .difficulty-2 { color: #8BC34A; }
+        .difficulty-3 { color: #FFC107; }
+        .difficulty-4 { color: #FF9800; }
+        .difficulty-5 { color: #F44336; }
+        .lesson-description {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .lesson-stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .parts-list {
+            margin: 20px 0;
+        }
+        .part-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+        .part-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .part-content {
+            color: #666;
+            font-size: 14px;
+        }
+        .start-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .start-button:hover {
+            background-color: #45a049;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .edit-button {
+            background-color: #3498db;
+        }
+        .edit-button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="lesson-title">{{ lesson.name }}</h1>
+
+        <div class="lesson-meta">
+            <span>
+                Автор: <a href="{% url 'get_concrete_profile' lesson.creator.id %}" class="creator-link">
+                    {{ lesson.creator.get_full_name|default:lesson.creator.username }}
+                </a>
+            </span>
+            <span class="difficulty difficulty-{{ lesson.difficulty }}">
+                Сложность: {{ lesson.get_difficulty_display }}
+            </span>
+        </div>
+        <div class="lesson-description">
+            {{ lesson.description|default:"Описание отсутствует" }}
+        </div>
+
+        <div class="lesson-stats">
+            <p>Количество частей: {{ parts.count }}</p>
+            <p>Лекций: {{ lecture_count }}</p>
+            <p>Тестов: {{ test_count }}</p>
+            <p>Общее время прохождения: ~{{ total_time }} минут</p>
+        </div>
+
+        <h3>Содержание курса:</h3>
+        <div class="parts-list">
+            {% for part in parts %}
+            <div class="part-item">
+                <div class="part-title">Часть {{ part.number }}: {{ part.name }}</div>
+                <div class="part-content">
+                    {{ part.content|truncatechars:100|default:"Без текстового содержания" }}
+                </div>
+                <small>Тип: {{ part.get_type_display }}</small>
+            </div>
+            {% empty %}
+            <p>В этом курсе пока нет частей.</p>
+            {% endfor %}
+        </div>
+
+        <div>
+            <small>Создан: {{ lesson.dt_created|date:"d.m.Y H:i" }}</small><br>
+            <small>Обновлён: {{ lesson.dt_updated|date:"d.m.Y H:i" }}</small>
+        </div>
+
+        {% if user == lesson.creator %}
+            <a href="{% url 'full_course' lesson.id %}" class="edit-button">Редактировать</a>
+        {% else %}
+            <a href="{% url 'full_course' lesson.id %}" class="start-button">Пройти →</a>
+        {% endif %}
+        <a href="{% url 'list_of_courses' %}" class="back-link">← Вернуться к списку курсов</a>
+    </div>
+</body>
+</html>

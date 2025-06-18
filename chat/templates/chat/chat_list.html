@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Мои чаты</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .chat-item:hover {
+            background-color: #f8f9fa;
+        }
+        .message-preview {
+            max-width: 400px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+{% include 'education/header.html' %}
+<body>
+    <div class="container mt-4">
+        <h2 class="mb-4">Мои чаты</h2>
+
+        <div class="list-group">
+            {% for chat in chat_sessions %}
+                {% with interlocutor=chat.first_user|default:chat.second_user %}
+                    {% if interlocutor == request.user %}
+                        {% with interlocutor=chat.second_user|default:chat.first_user %}
+                            <a href="{% url 'room' chat.uuid %}" class="list-group-item list-group-item-action chat-item">
+                                <div class="d-flex align-items-center">
+                                    <img
+                                        src="{{ interlocutor.userinformation.image.url }}"
+                                        alt="{{ interlocutor.username }}"
+                                        class="rounded-circle me-3"
+                                        width="50"
+                                        height="50"
+                                        onerror="this.src='{% get_media_prefix %}profile_images/ppt_1.jpg' %}'"
+                                    >
+
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-1">{{ interlocutor.username }}</h5>
+                                            <small class="text-muted">
+                                                {{ chat.dt_last_message|date:"d M H:i" }}
+                                            </small>
+                                        </div>
+
+                                        {% with last_message=chat.message_set.last %}
+                                            <p class="mb-1 message-preview">
+                                                {% if last_message %}
+                                                    {% if last_message.sender == request.user %}
+                                                        <strong>Вы:</strong>
+                                                    {% endif %}
+                                                    {{ last_message.text }}
+                                                {% else %}
+                                                    <em class="text-muted">Нет сообщений</em>
+                                                {% endif %}
+                                            </p>
+
+                                            <div>
+                                                {% if last_message %}
+                                                    {% if not last_message.is_checked and last_message.sender != request.user %}
+                                                        <span class="badge bg-primary">Новое</span>
+                                                    {% elif not last_message.is_received and last_message.sender == request.user %}
+                                                        <span class="badge bg-secondary">Отправлено</span>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            </a>
+                        {% endwith %}
+                    {% else %}
+                        <a href="{% url 'room' chat.uuid %}" class="list-group-item list-group-item-action chat-item">
+                            <div class="d-flex align-items-center">
+                                <img
+                                    src="{{ interlocutor.userinformation.image.url }}"
+                                    alt="{{ interlocutor.username }}"
+                                    class="rounded-circle me-3"
+                                    width="50"
+                                    height="50"
+                                    onerror="this.src='{% get_media_prefix %}profile_images/ppt_1.jpg' %}'"
+                                >
+
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-1">{{ interlocutor.username }}</h5>
+                                        <small class="text-muted">
+                                            {{ chat.dt_last_message|date:"d M H:i" }}
+                                        </small>
+                                    </div>
+
+                                    {% with last_message=chat.message_set.last %}
+                                        <p class="mb-1 message-preview">
+                                            {% if last_message %}
+                                                {% if last_message.sender == request.user %}
+                                                    <strong>Вы:</strong>
+                                                {% endif %}
+                                                {{ last_message.text }}
+                                            {% else %}
+                                                <em class="text-muted">Нет сообщений</em>
+                                            {% endif %}
+                                        </p>
+
+                                        <div>
+                                            {% if last_message %}
+                                                {% if not last_message.is_checked and last_message.sender != request.user %}
+                                                    <span class="badge bg-primary">Новое</span>
+                                                {% elif not last_message.is_received and last_message.sender == request.user %}
+                                                    <span class="badge bg-secondary">Отправлено</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </a>
+                    {% endif %}
+                {% endwith %}
+            {% empty %}
+                <div class="alert alert-info">У вас пока нет чатов</div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+{% include 'education/footer.html' %}

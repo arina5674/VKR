@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование профиля</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .delete-btn {
+            cursor: pointer;
+            color: #dc3545;
+            font-size: 1.2rem;
+            margin-left: 10px;
+        }
+        .delete-btn:hover {
+            color: #bd2130;
+        }
+        .fact-item, .education-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        #id_image {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+        }
+
+        .upload-label {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #0d6efd;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    {% include 'education/header.html' %}
+    <div class="container mt-4">
+        <h1>Редактирование профиля</h1>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Основная информация профиля -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <img src="{% if form.instance.image %}{{ form.instance.image.url }}{% else %}{% static 'education/images/default_avatar.jpg' %}{% endif %}"
+                         class="rounded-circle mb-3"
+                         width="200"
+                         height="200"
+                         id="avatar-preview">
+                        <!-- Замена стандартного поля на кастомный инпут -->
+                        <div class="mb-3">
+                            <label for="id_image" class="form-label">Изменить фото</label>
+                            <input type="file" class="form-control" name="image" accept="image/*" id="id_image">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Имя</label>
+                                <input type="text" class="form-control" value="{{ request.user.first_name }}" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Фамилия</label>
+                                <input type="text" class="form-control" value="{{ request.user.last_name }}" disabled>
+                            </div>
+                            {{ form.dt_birthday.label_tag }}
+                            {{ form.dt_birthday }}
+                            {{ form.status.label_tag }}
+                            {{ form.status }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Основная информация -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Основная информация</h5>
+                    <div class="mb-3">
+                        {{ form.town.label_tag }}
+                        {{ form.town }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.address.label_tag }}
+                        {{ form.address }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label_tag }}
+                        {{ form.description }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Интересные факты -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Интересные факты</h5>
+                    <div id="facts-container">
+                        {% for fact in facts %}
+                        <div class="fact-item row">
+                            <div class="col-10">
+                                <input type="hidden" name="fact_id" value="{{ fact.id }}">
+                                <input type="text" name="fact_text" class="form-control" value="{{ fact.text }}">
+                            </div>
+                            <div class="col-2 d-flex align-items-center justify-content-end">
+                                <span class="delete-btn" onclick="removeItem(this)">✕</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="add-fact">
+                        + Добавить факт
+                    </button>
+                </div>
+            </div>
+
+            <!-- Образование -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Образование</h5>
+                    <div id="education-container">
+                        <!-- Для существующих записей -->
+                        {% for edu in educations %}
+                        <div class="education-item row">
+                            <div class="col-8">
+                                <input type="hidden" name="edu_id" value="{{ edu.id }}">
+                                <input type="text" name="edu_university" class="form-control" value="{{ edu.university }}">
+                            </div>
+                            <div class="col-2 d-flex align-items-center">
+                                <div class="form-check">
+                                    <!-- Уникальное имя для чекбокса с ID записи -->
+                                    <input type="checkbox" name="edu_confirmed_{{ edu.id }}" class="form-check-input"
+                                           {% if edu.is_confirmed %}checked{% endif %}>
+                                    <label class="form-check-label">
+                                        Подтверждено
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-2 d-flex align-items-center justify-content-end">
+                                <span class="delete-btn" onclick="removeItem(this)">✕</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="add-education">
+                        + Добавить место обучения
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'get_concrete_profile' request.user.id %}" class="btn btn-secondary">Отмена</a>
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Добавление нового факта
+        document.getElementById('add-fact').addEventListener('click', function() {
+            const container = document.getElementById('facts-container');
+            const newFact = `
+            <div class="fact-item row">
+                <div class="col-10">
+                    <input type="hidden" name="fact_id" value="0">
+                    <input type="text" name="fact_text" class="form-control">
+                </div>
+                <div class="col-2 d-flex align-items-center justify-content-end">
+                    <span class="delete-btn" onclick="removeItem(this)">✕</span>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', newFact);
+        });
+
+        // Добавление нового образования
+        document.getElementById('add-education').addEventListener('click', function() {
+    const container = document.getElementById('education-container');
+    const uniqueId = 'new_' + Date.now(); // Генерация уникального ID
+
+    const newEducation = `
+    <div class="education-item row">
+        <div class="col-8">
+            <input type="hidden" name="edu_id" value="0">
+            <input type="text" name="edu_university" class="form-control">
+        </div>
+        <div class="col-2 d-flex align-items-center">
+            <div class="form-check">
+                <!-- Уникальное имя для нового чекбокса -->
+                <input type="checkbox" name="edu_confirmed_${uniqueId}" class="form-check-input">
+                <label class="form-check-label">
+                    Подтверждено
+                </label>
+            </div>
+        </div>
+        <div class="col-2 d-flex align-items-center justify-content-end">
+            <span class="delete-btn" onclick="removeItem(this)">✕</span>
+        </div>
+    </div>`;
+    container.insertAdjacentHTML('beforeend', newEducation);
+        });
+    });
+    // Обновление превью при выборе нового изображения
+    document.getElementById('id_image')?.addEventListener('change', function(event) {
+        const [file] = event.target.files;
+        if (file) {
+            const preview = document.getElementById('avatar-preview');
+            preview.src = URL.createObjectURL(file);
+        }
+    });
+
+    // Удаление элемента
+    function removeItem(btn) {
+        btn.closest('.fact-item, .education-item').remove();
+    }
+    </script>
+</body>
+</html>
