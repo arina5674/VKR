@@ -317,7 +317,11 @@
             </div>
             {% else %}
             <div class="markdown-content" id="part-{{ part.id }}-content">
-                <img src="{{ part.image.url }}" alt="Image for part {{ part.id }}">
+                {% if part.image %}
+                        <img src="{{ part.image.url }}" id="part_{{ part.id }}_image_preview" class="image-preview" style="display: block;">
+                        {% else %}
+                        <img id="part_{{ part.id }}_image_preview" class="image-preview">
+                        {% endif %}
                 {{ part.content }}
             </div>
             {% endif %}

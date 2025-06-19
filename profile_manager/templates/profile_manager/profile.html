@@ -173,6 +173,12 @@
             {% if not is_owner and user.is_authenticated %}
             <a href="{% url 'start_chat' profile_user.id %}" class="btn-custom btn-chat">Написать сообщение</a>
             {% endif %}
+            {% if is_owner %}
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn-custom">Выйти</button>
+            </form>
+            {% endif %}
         </div>
     </div>
 </body>

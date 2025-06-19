@@ -42,6 +42,7 @@ def user_register(request):
             del cd['password_again']
             user = User.objects.create_user(**cd)
             login(request, user)
+            UserInformation.objects.create(user_id=user.id)
             return redirect(urls.reverse(get_concrete_profile, args=[user.id]))
     else:
         form = RegisterForm()
